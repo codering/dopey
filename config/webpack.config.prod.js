@@ -19,6 +19,9 @@ var InterpolateHtmlPlugin = require('react-dev-utils/InterpolateHtmlPlugin');
 var paths = require('./paths');
 var getClientEnvironment = require('./env');
 
+var getConfig = require('../utils/getConfig')
+const config = getConfig();
+
 // @remove-on-eject-begin
 // `path` is not used after eject - see https://github.com/facebookincubator/create-react-app/issues/1174
 var path = require('path');
@@ -92,7 +95,8 @@ module.exports = {
     // We also include JSX as a common component filename extension to support
     // some tools, although we do not recommend using it, see:
     // https://github.com/facebookincubator/create-react-app/issues/290
-    extensions: ['.js', '.json', '.jsx', ''],
+    extensions: ['.web.js', '.web.jsx', '.web.ts', '.web.tsx',
+        '.js', '.json', '.jsx', '.ts', '.tsx', '',],
     alias: {
       // Support React Native Web
       // https://www.smashingmagazine.com/2016/08/a-glimpse-into-the-future-with-react-native-for-web/
@@ -132,9 +136,10 @@ module.exports = {
         exclude: [
           /\.html$/,
           /\.(js|jsx)$/,
-          /\.css$/,
+          /\.(css|less)$/,
           /\.json$/,
-          /\.svg$/
+          /\.svg$/,
+          /\.tsx?$/,
         ],
         loader: 'url',
         query: {
@@ -147,20 +152,6 @@ module.exports = {
         test: /\.(js|jsx)$/,
         include: paths.appSrc,
         loader: 'babel',
-        // @remove-on-eject-begin
-        query: {
-          babelrc: false,
-          presets: [
-            require.resolve('babel-preset-es2015'),
-            require.resolve('babel-preset-react'),
-            require.resolve('babel-preset-stage-0'),
-          ],
-          plugins: [
-            require.resolve('babel-plugin-add-module-exports'),
-            require.resolve('babel-plugin-react-require'),
-          ],
-        },
-        // @remove-on-eject-end
       },
       // The notation here is somewhat confusing.
       // "postcss" loader applies autoprefixer to our CSS.
@@ -189,17 +180,41 @@ module.exports = {
         test: /\.json$/,
         loader: 'json'
       },
-      // "file" loader for svg
-      {
+      // ** STOP ** Are you adding a new loader?
+      // Remember to add the new extension(s) to the "url" loader exclusion list.
+    ].concat(
+      config.svgSpriteLoaderDirs ? [{
+        test: /\.svg$/,
+        loader: 'file',
+        exclude: config.svgSpriteLoaderDirs,
+        query: {
+          name: 'static/media/[name].[hash:8].[ext]'
+        }
+      }, {
+        test: /\.(svg)$/i,
+        loader: 'svg-sprite',
+        include: config.svgSpriteLoaderDirs
+      }] : {
         test: /\.svg$/,
         loader: 'file',
         query: {
           name: 'static/media/[name].[hash:8].[ext]'
         }
       }
-      // ** STOP ** Are you adding a new loader?
-      // Remember to add the new extension(s) to the "url" loader exclusion list.
-    ]
+    )
+  },
+  babel: {
+    babelrc: false,
+    presets: [
+      require.resolve('babel-preset-es2015'),
+      require.resolve('babel-preset-react'),
+      require.resolve('babel-preset-stage-0'),
+    ],
+    plugins: [
+      require.resolve('babel-plugin-add-module-exports'),
+      require.resolve('babel-plugin-react-require'),
+    ].concat(config.extraBabelPlugins || []),
+    cacheDirectory: true,
   },
   // @remove-on-eject-begin
   // Point ESLint to our predefined config.
@@ -213,7 +228,7 @@ module.exports = {
   // We use PostCSS for autoprefixing only.
   postcss: function() {
     return [
-      autoprefixer({
+      autoprefixer(config.autoprefixer || {
         browsers: [
           '>1%',
           'last 4 versions',
@@ -221,7 +236,7 @@ module.exports = {
           'not ie < 9', // React doesn't support IE8 anyway
         ]
       }),
-    ];
+    ].concat(config.extraPostCSSPlugins ? config.extraPostCSSPlugins : []);
   },
   plugins: [
     // Makes some environment variables available in index.html.
