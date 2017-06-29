@@ -72,6 +72,8 @@ const postcssOptions = {
   ].concat(config.extraPostCSSPlugins ? config.extraPostCSSPlugins : []),
 }
 
+const swPrecacheConfig = config.swPrecache || {};
+
 
 // =====================
 
@@ -384,9 +386,9 @@ module.exports = {
       // Work around Windows path issue in SWPrecacheWebpackPlugin:
       // https://github.com/facebookincubator/create-react-app/issues/2235
       stripPrefix: paths.appBuild.replace(/\\/g, '/') + '/',
-      importScripts: ["runtimeCaching.js"],
-      // enable sw-toolbox
-      runtimeCaching: [], 
+      importScripts: swPrecacheConfig.importScripts,
+      // sw-toolbox
+      runtimeCaching: swPrecacheConfig.runtimeCaching,
     }),
     // Moment.js is an extremely popular library that bundles large locale files
     // by default due to how Webpack interprets its code. This is a practical
