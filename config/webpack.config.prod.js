@@ -36,44 +36,44 @@ const publicUrl = publicPath.slice(0, -1);
 // Get environment variables to inject into our app.
 const env = getClientEnvironment(publicUrl);
 
-
 // =====================
 
-const getConfig = require('../utils/getConfig')
+const getConfig = require('../utils/getConfig');
 const config = getConfig();
 
 const babelOptions = {
   babelrc: false,
+  compact: true,
   presets: [
     require.resolve('babel-preset-es2015'),
     require.resolve('babel-preset-react'),
-    require.resolve('babel-preset-stage-0'),
+    require.resolve('babel-preset-stage-0')
   ],
   plugins: [
     require.resolve('babel-plugin-add-module-exports'),
-    require.resolve('babel-plugin-react-require'),
+    require.resolve('babel-plugin-react-require')
   ].concat(config.extraBabelPlugins || []),
-  cacheDirectory: true,
-}
+  cacheDirectory: true
+};
 
 const postcssOptions = {
   ident: 'postcss', // https://webpack.js.org/guides/migrating/#complex-options
-  plugins: () => [
-    require('postcss-flexbugs-fixes'),
-    autoprefixer({
-      browsers: [
-        '>1%',
-        'last 4 versions',
-        'Firefox ESR',
-        'not ie < 9', // React doesn't support IE8 anyway
-      ],
-      flexbox: 'no-2009',
-    }),
-  ].concat(config.extraPostCSSPlugins ? config.extraPostCSSPlugins : []),
-}
+  plugins: () =>
+    [
+      require('postcss-flexbugs-fixes'),
+      autoprefixer({
+        browsers: [
+          '>1%',
+          'last 4 versions',
+          'Firefox ESR',
+          'not ie < 9' // React doesn't support IE8 anyway
+        ],
+        flexbox: 'no-2009'
+      })
+    ].concat(config.extraPostCSSPlugins ? config.extraPostCSSPlugins : [])
+};
 
 const swPrecacheConfig = config.swPrecache || {};
-
 
 // =====================
 
@@ -116,9 +116,9 @@ module.exports = {
     chunkFilename: 'static/js/[name].[chunkhash:8].chunk.js',
     // We inferred the "public path" (such as / or /my-project) from homepage.
     publicPath: publicPath,
-    // Point sourcemap entries to original disk location
+    // Point sourcemap entries to original disk location (format as URL on Windows)
     devtoolModuleFilenameTemplate: info =>
-      path.relative(paths.appSrc, info.absoluteResourcePath),
+      path.relative(paths.appSrc, info.absoluteResourcePath).replace(/\\/g, '/')
   },
   resolve: {
     // This allows you to set a fallback for where Webpack should look for modules.
@@ -133,8 +133,17 @@ module.exports = {
     // We also include JSX as a common component filename extension to support
     // some tools, although we do not recommend using it, see:
     // https://github.com/facebookincubator/create-react-app/issues/290
-    extensions: ['.web.js', '.web.jsx', '.web.ts', '.web.tsx',
-        '.js', '.json', '.jsx', '.ts', '.tsx',],
+    extensions: [
+      '.web.js',
+      '.web.jsx',
+      '.web.ts',
+      '.web.tsx',
+      '.js',
+      '.json',
+      '.jsx',
+      '.ts',
+      '.tsx'
+    ],
     alias: {
       // @remove-on-eject-begin
       // Resolve Babel runtime relative to react-scripts.
@@ -147,7 +156,7 @@ module.exports = {
       // @remove-on-eject-end
       // Support React Native Web
       // https://www.smashingmagazine.com/2016/08/a-glimpse-into-the-future-with-react-native-for-web/
-      'react-native': 'react-native-web',
+      'react-native': 'react-native-web'
     },
     plugins: [
       // Prevents users from importing files from outside of src/ (or node_modules/).
@@ -155,8 +164,8 @@ module.exports = {
       // To fix this, we prevent you from importing files out of src/ -- if you'd like to,
       // please link the files into your node_modules/ and let module-resolution kick in.
       // Make sure your source files are compiled, as they will not be processed in any way.
-      new ModuleScopePlugin(paths.appSrc),
-    ],
+      new ModuleScopePlugin(paths.appSrc)
+    ]
   },
   module: {
     strictExportPresence: true,
@@ -182,12 +191,12 @@ module.exports = {
           /\.bmp$/,
           /\.gif$/,
           /\.jpe?g$/,
-          /\.png$/,
+          /\.png$/
         ],
         loader: require.resolve('file-loader'),
         options: {
-          name: 'static/media/[name].[hash:8].[ext]',
-        },
+          name: 'static/media/[name].[hash:8].[ext]'
+        }
       },
       // "url" loader works just like "file" loader but it also embeds
       // assets smaller than specified size as data URLs to avoid requests.
@@ -196,26 +205,29 @@ module.exports = {
         loader: require.resolve('url-loader'),
         options: {
           limit: 10000,
-          name: 'static/media/[name].[hash:8].[ext]',
-        },
+          name: 'static/media/[name].[hash:8].[ext]'
+        }
       },
       // Process JS with Babel.
       {
         test: /\.(js|jsx)$/,
         include: paths.appSrc,
         loader: require.resolve('babel-loader'),
-        options: babelOptions,
+        options: babelOptions
       },
       // Process TSX with Babel.
       {
         test: /\.tsx?$/,
         include: paths.appSrc,
-        use: [{
-          loader: require.resolve('babel-loader'),
-          options: babelOptions,
-        },{
-          loader: require.resolve('awesome-typescript-loader')
-        }],
+        use: [
+          {
+            loader: require.resolve('babel-loader'),
+            options: babelOptions
+          },
+          {
+            loader: require.resolve('awesome-typescript-loader')
+          }
+        ]
       },
       // The notation here is somewhat confusing.
       // "postcss" loader applies autoprefixer to our CSS.
@@ -241,18 +253,18 @@ module.exports = {
                   options: {
                     importLoaders: 1,
                     minimize: true,
-                    sourceMap: true,
-                  },
+                    sourceMap: true
+                  }
                 },
                 {
                   loader: require.resolve('postcss-loader'),
-                  options: postcssOptions,
+                  options: postcssOptions
                 }
-              ],
+              ]
             },
             extractTextPluginOptions
           )
-        ),
+        )
         // Note: this won't work without `new ExtractTextPlugin()` in `plugins`.
       },
       {
@@ -267,44 +279,49 @@ module.exports = {
                   options: {
                     importLoaders: 1,
                     minimize: true,
-                    sourceMap: true,
-                  },
+                    sourceMap: true
+                  }
                 },
                 {
                   loader: require.resolve('postcss-loader'),
-                  options: postcssOptions,
+                  options: postcssOptions
                 },
                 {
-                  loader: require.resolve('less-loader'),
-                },
-              ],
+                  loader: require.resolve('less-loader')
+                }
+              ]
             },
             extractTextPluginOptions
           )
-        ),
-      },
+        )
+      }
       // ** STOP ** Are you adding a new loader?
       // Remember to add the new extension(s) to the "file" loader exclusion list.
     ].concat(
-      config.svgSpriteLoaderDirs ? [{
-        test: /\.svg$/,
-        loader: require.resolve('file-loader'),
-        exclude: config.svgSpriteLoaderDirs,
-        options: {
-          name: 'static/media/[name].[hash:8].[ext]'
-        }
-      }, {
-        test: /\.(svg)$/i,
-        loader: require.resolve('svg-sprite-loader'),
-        include: config.svgSpriteLoaderDirs
-      }] : {
-        test: /\.svg$/,
-        loader: require.resolve('file-loader'),
-        options: {
-          name: 'static/media/[name].[hash:8].[ext]'
-        }
-      }
-    ),
+      config.svgSpriteLoaderDirs
+        ? [
+            {
+              test: /\.svg$/,
+              loader: require.resolve('file-loader'),
+              exclude: config.svgSpriteLoaderDirs,
+              options: {
+                name: 'static/media/[name].[hash:8].[ext]'
+              }
+            },
+            {
+              test: /\.(svg)$/i,
+              loader: require.resolve('svg-sprite-loader'),
+              include: config.svgSpriteLoaderDirs
+            }
+          ]
+        : {
+            test: /\.svg$/,
+            loader: require.resolve('file-loader'),
+            options: {
+              name: 'static/media/[name].[hash:8].[ext]'
+            }
+          }
+    )
   },
   plugins: [
     // Makes some environment variables available in index.html.
@@ -327,8 +344,8 @@ module.exports = {
         keepClosingSlash: true,
         minifyJS: true,
         minifyCSS: true,
-        minifyURLs: true,
-      },
+        minifyURLs: true
+      }
     }),
     // Makes some environment variables available to the JS code, for example:
     // if (process.env.NODE_ENV === 'production') { ... }. See `./env.js`.
@@ -339,25 +356,29 @@ module.exports = {
     new webpack.optimize.UglifyJsPlugin({
       compress: {
         warnings: false,
-        // This feature has been reported as buggy a few times, such as:
-        // https://github.com/mishoo/UglifyJS2/issues/1964
-        // We'll wait with enabling it by default until it is more solid.
-        reduce_vars: false,
+        // Disabled because of an issue with Uglify breaking seemingly valid code:
+        // https://github.com/facebookincubator/create-react-app/issues/2376
+        // Pending further investigation:
+        // https://github.com/mishoo/UglifyJS2/issues/2011
+        comparisons: false
       },
       output: {
         comments: false,
+        // Turned on because emoji and regex is not minified properly using default
+        // https://github.com/facebookincubator/create-react-app/issues/2488
+        ascii_only: true
       },
-      sourceMap: true,
+      sourceMap: true
     }),
     // Note: this won't work without ExtractTextPlugin.extract(..) in `loaders`.
     new ExtractTextPlugin({
-      filename: cssFilename,
+      filename: cssFilename
     }),
     // Generate a manifest file which contains a mapping of all asset filenames
     // to their corresponding output file so that tools can pick it up without
     // having to parse `index.html`.
     new ManifestPlugin({
-      fileName: 'asset-manifest.json',
+      fileName: 'asset-manifest.json'
     }),
     // Generate a service worker script that will precache, and keep up to date,
     // the HTML & assets that are part of the Webpack build.
@@ -373,6 +394,11 @@ module.exports = {
           // This message occurs for every build and is a bit too noisy.
           return;
         }
+        if (message.indexOf('Skipping static resource') === 0) {
+          // This message obscures real errors so we ignore it.
+          // https://github.com/facebookincubator/create-react-app/issues/2612
+          return;
+        }
         console.log(message);
       },
       minify: true,
@@ -383,25 +409,23 @@ module.exports = {
       navigateFallbackWhitelist: [/^(?!\/__).*/],
       // Don't precache sourcemaps (they're large) and build asset manifest:
       staticFileGlobsIgnorePatterns: [/\.map$/, /asset-manifest\.json$/],
-      // Work around Windows path issue in SWPrecacheWebpackPlugin:
-      // https://github.com/facebookincubator/create-react-app/issues/2235
-      stripPrefix: paths.appBuild.replace(/\\/g, '/') + '/',
       importScripts: swPrecacheConfig.importScripts,
       // sw-toolbox
-      runtimeCaching: swPrecacheConfig.runtimeCaching,
+      runtimeCaching: swPrecacheConfig.runtimeCaching
     }),
     // Moment.js is an extremely popular library that bundles large locale files
     // by default due to how Webpack interprets its code. This is a practical
     // solution that requires the user to opt into importing specific locales.
     // https://github.com/jmblog/how-to-optimize-momentjs-with-webpack
     // You can remove this if you don't use Moment.js:
-    new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
+    new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/)
   ],
   // Some libraries import Node modules but don't use them in the browser.
   // Tell Webpack to provide empty mocks for them so importing them works.
   node: {
+    dgram: 'empty',
     fs: 'empty',
     net: 'empty',
-    tls: 'empty',
-  },
+    tls: 'empty'
+  }
 };

@@ -34,7 +34,7 @@ const env = getClientEnvironment(publicUrl);
 
 // ===================
 
-const getConfig = require('../utils/getConfig')
+const getConfig = require('../utils/getConfig');
 const config = getConfig();
 
 const babelOptions = {
@@ -42,32 +42,32 @@ const babelOptions = {
   presets: [
     require.resolve('babel-preset-es2015'),
     require.resolve('babel-preset-react'),
-    require.resolve('babel-preset-stage-0'),
+    require.resolve('babel-preset-stage-0')
   ],
   plugins: [
     require.resolve('babel-plugin-add-module-exports'),
-    require.resolve('babel-plugin-react-require'),
+    require.resolve('babel-plugin-react-require')
   ].concat(config.extraBabelPlugins || []),
-  cacheDirectory: true,
-}
+  cacheDirectory: true
+};
 
 const postcssOptions = {
   ident: 'postcss', // https://webpack.js.org/guides/migrating/#complex-options
-  plugins: () => [
-    require('postcss-flexbugs-fixes'),
-    autoprefixer({
-      browsers: [
-        '>1%',
-        'last 4 versions',
-        'Firefox ESR',
-        'not ie < 9', // React doesn't support IE8 anyway
-      ],
-      flexbox: 'no-2009',
-    }),
-  ].concat(config.extraPostCSSPlugins ? config.extraPostCSSPlugins : []),
-}
+  plugins: () =>
+    [
+      require('postcss-flexbugs-fixes'),
+      autoprefixer({
+        browsers: [
+          '>1%',
+          'last 4 versions',
+          'Firefox ESR',
+          'not ie < 9' // React doesn't support IE8 anyway
+        ],
+        flexbox: 'no-2009'
+      })
+    ].concat(config.extraPostCSSPlugins ? config.extraPostCSSPlugins : [])
+};
 // ===================
-
 
 // This is the development configuration.
 // It is focused on developer experience and fast rebuilds.
@@ -94,7 +94,7 @@ module.exports = {
     // Errors should be considered fatal in development
     require.resolve('react-error-overlay'),
     // Finally, this is your app's code:
-    paths.appIndexJs,
+    paths.appIndexJs
     // We include the app code last so that if there is a runtime error during
     // initialization, it doesn't blow up the WebpackDevServer client, and
     // changing JS code would still trigger a refresh.
@@ -112,9 +112,9 @@ module.exports = {
     chunkFilename: 'static/js/[name].chunk.js',
     // This is the URL that app is served from. We use "/" in development.
     publicPath: publicPath,
-    // Point sourcemap entries to original disk location
+    // Point sourcemap entries to original disk location (format as URL on Windows)
     devtoolModuleFilenameTemplate: info =>
-      path.resolve(info.absoluteResourcePath),
+      path.resolve(info.absoluteResourcePath).replace(/\\/g, '/')
   },
   resolve: {
     // This allows you to set a fallback for where Webpack should look for modules.
@@ -129,8 +129,17 @@ module.exports = {
     // We also include JSX as a common component filename extension to support
     // some tools, although we do not recommend using it, see:
     // https://github.com/facebookincubator/create-react-app/issues/290
-    extensions: ['.web.js', '.web.jsx', '.web.ts', '.web.tsx',
-        '.js', '.json', '.jsx', '.ts', '.tsx',],
+    extensions: [
+      '.web.js',
+      '.web.jsx',
+      '.web.ts',
+      '.web.tsx',
+      '.js',
+      '.json',
+      '.jsx',
+      '.ts',
+      '.tsx'
+    ],
     alias: {
       // @remove-on-eject-begin
       // Resolve Babel runtime relative to react-scripts.
@@ -143,7 +152,7 @@ module.exports = {
       // @remove-on-eject-end
       // Support React Native Web
       // https://www.smashingmagazine.com/2016/08/a-glimpse-into-the-future-with-react-native-for-web/
-      'react-native': 'react-native-web',
+      'react-native': 'react-native-web'
     },
     plugins: [
       // Prevents users from importing files from outside of src/ (or node_modules/).
@@ -151,8 +160,8 @@ module.exports = {
       // To fix this, we prevent you from importing files out of src/ -- if you'd like to,
       // please link the files into your node_modules/ and let module-resolution kick in.
       // Make sure your source files are compiled, as they will not be processed in any way.
-      new ModuleScopePlugin(paths.appSrc),
-    ],
+      new ModuleScopePlugin(paths.appSrc)
+    ]
   },
   module: {
     strictExportPresence: true,
@@ -180,12 +189,12 @@ module.exports = {
           /\.bmp$/,
           /\.gif$/,
           /\.jpe?g$/,
-          /\.png$/,
+          /\.png$/
         ],
         loader: require.resolve('file-loader'),
         options: {
-          name: 'static/media/[name].[hash:8].[ext]',
-        },
+          name: 'static/media/[name].[hash:8].[ext]'
+        }
       },
       // "url" loader works like "file" loader except that it embeds assets
       // smaller than specified limit in bytes as data URLs to avoid requests.
@@ -195,26 +204,29 @@ module.exports = {
         loader: require.resolve('url-loader'),
         options: {
           limit: 10000,
-          name: 'static/media/[name].[hash:8].[ext]',
-        },
+          name: 'static/media/[name].[hash:8].[ext]'
+        }
       },
       // Process JS with Babel.
       {
         test: /\.(js|jsx)$/,
         include: paths.appSrc,
         loader: require.resolve('babel-loader'),
-        options: babelOptions,
+        options: babelOptions
       },
       // Process TSX with Babel.
       {
         test: /\.tsx?$/,
         include: paths.appSrc,
-        use: [{
-          loader: require.resolve('babel-loader'),
-          options: babelOptions,
-        },{
-          loader: require.resolve('awesome-typescript-loader')
-        }],
+        use: [
+          {
+            loader: require.resolve('babel-loader'),
+            options: babelOptions
+          },
+          {
+            loader: require.resolve('awesome-typescript-loader')
+          }
+        ]
       },
       // "postcss" loader applies autoprefixer to our CSS.
       // "css" loader resolves paths in CSS and adds assets as dependencies.
@@ -228,14 +240,14 @@ module.exports = {
           {
             loader: require.resolve('css-loader'),
             options: {
-              importLoaders: 1,
-            },
+              importLoaders: 1
+            }
           },
           {
             loader: require.resolve('postcss-loader'),
-            options: postcssOptions,
-          },
-        ],
+            options: postcssOptions
+          }
+        ]
       },
       {
         test: /\.less$/,
@@ -244,39 +256,44 @@ module.exports = {
           {
             loader: require.resolve('css-loader'),
             options: {
-              importLoaders: 1,
-            },
+              importLoaders: 1
+            }
           },
           {
             loader: require.resolve('postcss-loader'),
-            options: postcssOptions,
+            options: postcssOptions
           },
           {
-            loader: require.resolve('less-loader'),
-          },
-        ],
-      },
+            loader: require.resolve('less-loader')
+          }
+        ]
+      }
       // ** STOP ** Are you adding a new loader?
       // Remember to add the new extension(s) to the "file" loader exclusion list.
     ].concat(
-      config.svgSpriteLoaderDirs ? [{
-        test: /\.svg$/,
-        loader: require.resolve('file-loader'),
-        exclude: config.svgSpriteLoaderDirs,
-        options: {
-          name: 'static/media/[name].[hash:8].[ext]'
-        }
-      }, {
-        test: /\.(svg)$/i,
-        loader: require.resolve('svg-sprite-loader'),
-        include: config.svgSpriteLoaderDirs,
-      }] : {
-        test: /\.svg$/,
-        loader: require.resolve('file-loader'),
-        options: {
-          name: 'static/media/[name].[hash:8].[ext]'
-        }
-      }
+      config.svgSpriteLoaderDirs
+        ? [
+            {
+              test: /\.svg$/,
+              loader: require.resolve('file-loader'),
+              exclude: config.svgSpriteLoaderDirs,
+              options: {
+                name: 'static/media/[name].[hash:8].[ext]'
+              }
+            },
+            {
+              test: /\.(svg)$/i,
+              loader: require.resolve('svg-sprite-loader'),
+              include: config.svgSpriteLoaderDirs
+            }
+          ]
+        : {
+            test: /\.svg$/,
+            loader: require.resolve('file-loader'),
+            options: {
+              name: 'static/media/[name].[hash:8].[ext]'
+            }
+          }
     )
   },
   plugins: [
@@ -288,7 +305,7 @@ module.exports = {
     // Generates an `index.html` file with the <script> injected.
     new HtmlWebpackPlugin({
       inject: true,
-      template: paths.appHtml,
+      template: paths.appHtml
     }),
     // Add module names to factory functions so they appear in browser profiler.
     new webpack.NamedModulesPlugin(),
@@ -311,19 +328,20 @@ module.exports = {
     // solution that requires the user to opt into importing specific locales.
     // https://github.com/jmblog/how-to-optimize-momentjs-with-webpack
     // You can remove this if you don't use Moment.js:
-    new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
+    new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/)
   ],
   // Some libraries import Node modules but don't use them in the browser.
   // Tell Webpack to provide empty mocks for them so importing them works.
   node: {
+    dgram: 'empty',
     fs: 'empty',
     net: 'empty',
-    tls: 'empty',
+    tls: 'empty'
   },
   // Turn off performance hints during development because we don't do any
   // splitting or minification in interest of speed. These warnings become
   // cumbersome.
   performance: {
-    hints: false,
-  },
+    hints: false
+  }
 };

@@ -15,11 +15,10 @@ function merge(oldObj, newObj) {
 }
 
 function getConfig(configFile) {
-
   const jsConfig = paths.resolveApp(`${configFile}.js`);
 
   if (existsSync(jsConfig)) {
-    return require(jsConfig);  // eslint-disable-line
+    return require(jsConfig); // eslint-disable-line
   } else {
     return {};
   }
@@ -52,6 +51,6 @@ function realGetConfig(configFile, env, pkg = {}) {
 module.exports = function() {
   const pkg = JSON.parse(readFileSync(paths.appPackageJson, 'utf-8'));
   return realGetConfig('.dopeyrc', process.env.NODE_ENV, pkg);
-}
+};
 
-exports.realGetConfig = realGetConfig
+exports.realGetConfig = realGetConfig;
