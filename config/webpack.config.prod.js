@@ -57,7 +57,9 @@ const babelOptions = {
 };
 
 const postcssOptions = {
-  ident: 'postcss', // https://webpack.js.org/guides/migrating/#complex-options
+  // Necessary for external CSS imports to work
+  // https://github.com/facebookincubator/create-react-app/issues/2677
+  ident: 'postcss',
   plugins: () =>
     [
       require('postcss-flexbugs-fixes'),
@@ -173,155 +175,149 @@ module.exports = {
       // TODO: Disable require.ensure as it's not a standard language feature.
       // We are waiting for https://github.com/facebookincubator/create-react-app/issues/2176.
       // { parser: { requireEnsure: false } },
-
-      // ** ADDING/UPDATING LOADERS **
-      // The "file" loader handles all assets unless explicitly excluded.
-      // The `exclude` list *must* be updated with every change to loader extensions.
-      // When adding a new loader, you must add its `test`
-      // as a new entry in the `exclude` list in the "file" loader.
-
-      // "file" loader makes sure those assets end up in the `build` folder.
-      // When you `import` an asset, you get its filename.
       {
-        exclude: [
-          /\.html$/,
-          /\.(js|jsx|tsx?)$/,
-          /\.(css|less)$/,
-          /\.json$/,
-          /\.bmp$/,
-          /\.gif$/,
-          /\.jpe?g$/,
-          /\.png$/
-        ],
-        loader: require.resolve('file-loader'),
-        options: {
-          name: 'static/media/[name].[hash:8].[ext]'
-        }
-      },
-      // "url" loader works just like "file" loader but it also embeds
-      // assets smaller than specified size as data URLs to avoid requests.
-      {
-        test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/],
-        loader: require.resolve('url-loader'),
-        options: {
-          limit: 10000,
-          name: 'static/media/[name].[hash:8].[ext]'
-        }
-      },
-      // Process JS with Babel.
-      {
-        test: /\.(js|jsx)$/,
-        include: paths.appSrc,
-        loader: require.resolve('babel-loader'),
-        options: babelOptions
-      },
-      // Process TSX with Babel.
-      {
-        test: /\.tsx?$/,
-        include: paths.appSrc,
-        use: [
+        // "oneOf" will traverse all following loaders until one will
+        // match the requirements. When no loader matches it will fall
+        // back to the "file" loader at the end of the loader list.
+        oneOf: [
+          // "url" loader works just like "file" loader but it also embeds
+          // assets smaller than specified size as data URLs to avoid requests.
           {
+            test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/],
+            loader: require.resolve('url-loader'),
+            options: {
+              limit: 10000,
+              name: 'static/media/[name].[hash:8].[ext]'
+            }
+          },
+          // Process JS with Babel.
+          {
+            test: /\.(js|jsx)$/,
+            include: paths.appSrc,
             loader: require.resolve('babel-loader'),
             options: babelOptions
           },
+          // Process TSX with Babel.
           {
-            loader: require.resolve('awesome-typescript-loader')
+            test: /\.tsx?$/,
+            include: paths.appSrc,
+            use: [
+              {
+                loader: require.resolve('babel-loader'),
+                options: babelOptions
+              },
+              {
+                loader: require.resolve('awesome-typescript-loader')
+              }
+            ]
+          },
+          // The notation here is somewhat confusing.
+          // "postcss" loader applies autoprefixer to our CSS.
+          // "css" loader resolves paths in CSS and adds assets as dependencies.
+          // "style" loader normally turns CSS into JS modules injecting <style>,
+          // but unlike in development configuration, we do something different.
+          // `ExtractTextPlugin` first applies the "postcss" and "css" loaders
+          // (second argument), then grabs the result CSS and puts it into a
+          // separate file in our build process. This way we actually ship
+          // a single CSS file in production instead of JS code injecting <style>
+          // tags. If you use code splitting, however, any async bundles will still
+          // use the "style" loader inside the async code so CSS from them won't be
+          // in the main CSS file.
+          {
+            test: /\.css$/,
+            loader: ExtractTextPlugin.extract(
+              Object.assign(
+                {
+                  fallback: require.resolve('style-loader'),
+                  use: [
+                    {
+                      loader: require.resolve('css-loader'),
+                      options: {
+                        importLoaders: 1,
+                        minimize: true,
+                        sourceMap: true
+                      }
+                    },
+                    {
+                      loader: require.resolve('postcss-loader'),
+                      options: postcssOptions
+                    }
+                  ]
+                },
+                extractTextPluginOptions
+              )
+            )
+            // Note: this won't work without `new ExtractTextPlugin()` in `plugins`.
+          },
+          {
+            test: /\.less$/,
+            loader: ExtractTextPlugin.extract(
+              Object.assign(
+                {
+                  fallback: require.resolve('style-loader'),
+                  use: [
+                    {
+                      loader: require.resolve('css-loader'),
+                      options: {
+                        importLoaders: 1,
+                        minimize: true,
+                        sourceMap: true
+                      }
+                    },
+                    {
+                      loader: require.resolve('postcss-loader'),
+                      options: postcssOptions
+                    },
+                    {
+                      loader: require.resolve('less-loader')
+                    }
+                  ]
+                },
+                extractTextPluginOptions
+              )
+            )
           }
         ]
-      },
-      // The notation here is somewhat confusing.
-      // "postcss" loader applies autoprefixer to our CSS.
-      // "css" loader resolves paths in CSS and adds assets as dependencies.
-      // "style" loader normally turns CSS into JS modules injecting <style>,
-      // but unlike in development configuration, we do something different.
-      // `ExtractTextPlugin` first applies the "postcss" and "css" loaders
-      // (second argument), then grabs the result CSS and puts it into a
-      // separate file in our build process. This way we actually ship
-      // a single CSS file in production instead of JS code injecting <style>
-      // tags. If you use code splitting, however, any async bundles will still
-      // use the "style" loader inside the async code so CSS from them won't be
-      // in the main CSS file.
-      {
-        test: /\.css$/,
-        loader: ExtractTextPlugin.extract(
-          Object.assign(
-            {
-              fallback: require.resolve('style-loader'),
-              use: [
-                {
-                  loader: require.resolve('css-loader'),
-                  options: {
-                    importLoaders: 1,
-                    minimize: true,
-                    sourceMap: true
+          .concat(
+            config.svgSpriteLoaderDirs
+              ? [
+                  {
+                    test: /\.svg$/,
+                    loader: require.resolve('file-loader'),
+                    exclude: config.svgSpriteLoaderDirs,
+                    options: {
+                      name: 'static/media/[name].[hash:8].[ext]'
+                    }
+                  },
+                  {
+                    test: /\.(svg)$/i,
+                    loader: require.resolve('svg-sprite-loader'),
+                    include: config.svgSpriteLoaderDirs
                   }
-                },
-                {
-                  loader: require.resolve('postcss-loader'),
-                  options: postcssOptions
-                }
-              ]
-            },
-            extractTextPluginOptions
+                ]
+              : []
           )
-        )
-        // Note: this won't work without `new ExtractTextPlugin()` in `plugins`.
-      },
-      {
-        test: /\.less$/,
-        loader: ExtractTextPlugin.extract(
-          Object.assign(
+          .concat([
+            // "file" loader makes sure assets end up in the `build` folder.
+            // When you `import` an asset, you get its filename.
+            // This loader don't uses a "test" so it will catch all modules
+            // that fall through the other loaders.
             {
-              fallback: require.resolve('style-loader'),
-              use: [
-                {
-                  loader: require.resolve('css-loader'),
-                  options: {
-                    importLoaders: 1,
-                    minimize: true,
-                    sourceMap: true
-                  }
-                },
-                {
-                  loader: require.resolve('postcss-loader'),
-                  options: postcssOptions
-                },
-                {
-                  loader: require.resolve('less-loader')
-                }
-              ]
-            },
-            extractTextPluginOptions
-          )
-        )
-      }
-      // ** STOP ** Are you adding a new loader?
-      // Remember to add the new extension(s) to the "file" loader exclusion list.
-    ].concat(
-      config.svgSpriteLoaderDirs
-        ? [
-            {
-              test: /\.svg$/,
               loader: require.resolve('file-loader'),
-              exclude: config.svgSpriteLoaderDirs,
+              // Exclude `js` files to keep "css" loader working as it injects
+              // it's runtime that would otherwise processed through "file" loader.
+              // Also exclude `html` and `json` extensions so they get processed
+              // by webpacks internal loaders.
+              exclude: [/\.js$/, /\.html$/, /\.json$/, /\.svg$/],
               options: {
                 name: 'static/media/[name].[hash:8].[ext]'
               }
-            },
-            {
-              test: /\.(svg)$/i,
-              loader: require.resolve('svg-sprite-loader'),
-              include: config.svgSpriteLoaderDirs
             }
-          ]
-        : {
-            test: /\.svg$/,
-            loader: require.resolve('file-loader'),
-            options: {
-              name: 'static/media/[name].[hash:8].[ext]'
-            }
-          }
-    )
+          ])
+      }
+      // ** STOP ** Are you adding a new loader?
+      // Make sure to add the new loader(s) before the "file" loader.
+    ]
   },
   plugins: [
     // Makes some environment variables available in index.html.
