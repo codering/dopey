@@ -1,13 +1,3 @@
-// @remove-on-eject-begin
-/**
- * Copyright (c) 2015-present, Facebook, Inc.
- * All rights reserved.
- *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- */
-// @remove-on-eject-end
 'use strict';
 
 const autoprefixer = require('autoprefixer');
@@ -32,44 +22,41 @@ const publicUrl = '';
 // Get environment variables to inject into our app.
 const env = getClientEnvironment(publicUrl);
 
-// ===================
-
-const getConfig = require('../utils/getConfig');
-const config = getConfig();
-
-const babelOptions = {
-  babelrc: false,
-  presets: [
-    require.resolve('babel-preset-es2015'),
-    require.resolve('babel-preset-react'),
-    require.resolve('babel-preset-stage-0')
-  ],
-  plugins: [
-    require.resolve('babel-plugin-add-module-exports'),
-    require.resolve('babel-plugin-react-require')
-  ].concat(config.extraBabelPlugins || []),
-  cacheDirectory: true
-};
-
-const postcssOptions = {
-  // Necessary for external CSS imports to work
-  // https://github.com/facebookincubator/create-react-app/issues/2677
-  ident: 'postcss',
-  plugins: () =>
-    [
-      require('postcss-flexbugs-fixes'),
-      autoprefixer({
-        browsers: [
-          '>1%',
-          'last 4 versions',
-          'Firefox ESR',
-          'not ie < 9' // React doesn't support IE8 anyway
-        ],
-        flexbox: 'no-2009'
-      })
-    ].concat(config.extraPostCSSPlugins ? config.extraPostCSSPlugins : [])
-};
-// ===================
+// Common CSS loaders
+const getCssLoaders = ({modules, px2rem}) => [
+  {
+    loader: require.resolve('css-loader'),
+    options: modules ? {
+      importLoaders: 1,
+      modules: true,
+      localIdentName: '[name]__[local]___[hash:base64:5]',
+    }: {
+      importLoaders: 1,
+    }
+  },
+  {
+    loader: require.resolve('postcss-loader'),
+    options: {
+      // Necessary for external CSS imports to work
+      // https://github.com/facebookincubator/create-react-app/issues/2677
+      ident: 'postcss',
+      plugins: () => [
+        require('postcss-flexbugs-fixes'),
+        autoprefixer({
+          browsers: [
+            '>1%',
+            'last 4 versions',
+            'Firefox ESR',
+            'not ie < 9', // React doesn't support IE8 anyway
+          ],
+          flexbox: 'no-2009',
+        }),
+      ]
+      // Transform px to rem
+      .concat(px2rem ? require('postcss-px2rem')(px2rem) : []),
+    },
+  }
+];
 
 // This is the development configuration.
 // It is focused on developer experience and fast rebuilds.
@@ -82,6 +69,8 @@ module.exports = {
   // This means they will be the "root" imports that are included in JS bundle.
   // The first two entry points enable "hot" CSS and auto-refreshes for JS.
   entry: [
+    // We ship a few polyfills by default:
+    require.resolve('./polyfills'),
     // Include an alternative client for WebpackDevServer. A client's job is to
     // connect to WebpackDevServer by a socket and get notified about changes.
     // When you save a file, the client will either apply hot updates (in case
@@ -93,12 +82,8 @@ module.exports = {
     // require.resolve('webpack-dev-server/client') + '?/',
     // require.resolve('webpack/hot/dev-server'),
     require.resolve('react-dev-utils/webpackHotDevClient'),
-    // We ship a few polyfills by default:
-    require.resolve('./polyfills'),
-    // Errors should be considered fatal in development
-    require.resolve('react-error-overlay'),
     // Finally, this is your app's code:
-    paths.appIndexJs
+    paths.appIndexJs,
     // We include the app code last so that if there is a runtime error during
     // initialization, it doesn't blow up the WebpackDevServer client, and
     // changing JS code would still trigger a refresh.
@@ -111,14 +96,14 @@ module.exports = {
     // This does not produce a real file. It's just the virtual path that is
     // served by WebpackDevServer in development. This is the JS bundle
     // containing code from all our entry points, and the Webpack runtime.
-    filename: 'static/js/bundle.js',
+    filename: 'static/js/[name].js',
     // There are also additional JS chunk files if you use code splitting.
     chunkFilename: 'static/js/[name].chunk.js',
     // This is the URL that app is served from. We use "/" in development.
     publicPath: publicPath,
     // Point sourcemap entries to original disk location (format as URL on Windows)
     devtoolModuleFilenameTemplate: info =>
-      path.resolve(info.absoluteResourcePath).replace(/\\/g, '/')
+      path.resolve(info.absoluteResourcePath).replace(/\\/g, '/'),
   },
   resolve: {
     // This allows you to set a fallback for where Webpack should look for modules.
@@ -133,30 +118,14 @@ module.exports = {
     // We also include JSX as a common component filename extension to support
     // some tools, although we do not recommend using it, see:
     // https://github.com/facebookincubator/create-react-app/issues/290
-    extensions: [
-      '.web.js',
-      '.web.jsx',
-      '.web.ts',
-      '.web.tsx',
-      '.js',
-      '.json',
-      '.jsx',
-      '.ts',
-      '.tsx'
-    ],
+    // `web` extension prefixes have been added for better support
+    // for React Native Web.
+    extensions: ['.web.js', '.js', '.json', '.web.jsx', '.jsx'],
     alias: {
-      // @remove-on-eject-begin
-      // Resolve Babel runtime relative to react-scripts.
-      // It usually still works on npm 3 without this but it would be
-      // unfortunate to rely on, as react-scripts could be symlinked,
-      // and thus babel-runtime might not be resolvable from the source.
-      'babel-runtime': path.dirname(
-        require.resolve('babel-runtime/package.json')
-      ),
-      // @remove-on-eject-end
+      
       // Support React Native Web
       // https://www.smashingmagazine.com/2016/08/a-glimpse-into-the-future-with-react-native-for-web/
-      'react-native': 'react-native-web'
+      'react-native': 'react-native-web',
     },
     plugins: [
       // Prevents users from importing files from outside of src/ (or node_modules/).
@@ -164,8 +133,8 @@ module.exports = {
       // To fix this, we prevent you from importing files out of src/ -- if you'd like to,
       // please link the files into your node_modules/ and let module-resolution kick in.
       // Make sure your source files are compiled, as they will not be processed in any way.
-      new ModuleScopePlugin(paths.appSrc, [paths.appPackageJson])
-    ]
+      new ModuleScopePlugin(paths.appSrc, [paths.appPackageJson]),
+    ],
   },
   module: {
     strictExportPresence: true,
@@ -173,7 +142,6 @@ module.exports = {
       // TODO: Disable require.ensure as it's not a standard language feature.
       // We are waiting for https://github.com/facebookincubator/create-react-app/issues/2176.
       // { parser: { requireEnsure: false } },
-
       {
         // "oneOf" will traverse all following loaders until one will
         // match the requirements. When no loader matches it will fall
@@ -187,29 +155,23 @@ module.exports = {
             loader: require.resolve('url-loader'),
             options: {
               limit: 10000,
-              name: 'static/media/[name].[hash:8].[ext]'
-            }
+              name: 'static/media/[name].[hash:8].[ext]',
+            },
           },
           // Process JS with Babel.
           {
             test: /\.(js|jsx)$/,
             include: paths.appSrc,
             loader: require.resolve('babel-loader'),
-            options: babelOptions
-          },
-          // Process TSX with Babel.
-          {
-            test: /\.tsx?$/,
-            include: paths.appSrc,
-            use: [
-              {
-                loader: require.resolve('babel-loader'),
-                options: babelOptions
-              },
-              {
-                loader: require.resolve('awesome-typescript-loader')
-              }
-            ]
+            options: {
+              babelrc: false,
+              // see https://github.com/facebookincubator/create-react-app/blob/master/packages/babel-preset-react-app/index.js
+              presets: [require.resolve('babel-preset-react-app')],
+              // This is a feature of `babel-loader` for webpack (not Babel itself).
+              // It enables caching results in ./node_modules/.cache/babel-loader/
+              // directory for faster rebuilds.
+              cacheDirectory: true,
+            },
           },
           // "postcss" loader applies autoprefixer to our CSS.
           // "css" loader resolves paths in CSS and adds assets as dependencies.
@@ -218,81 +180,65 @@ module.exports = {
           // in development "style" loader enables hot editing of CSS.
           {
             test: /\.css$/,
-            use: [
-              require.resolve('style-loader'),
-              {
-                loader: require.resolve('css-loader'),
-                options: {
-                  importLoaders: 1
-                }
-              },
-              {
-                loader: require.resolve('postcss-loader'),
-                options: postcssOptions
-              }
-            ]
+            use: [require.resolve('style-loader')]
+              .concat(getCssLoaders({px2rem: env.control.PX2REM})),
           },
           {
             test: /\.less$/,
-            use: [
-              require.resolve('style-loader'),
-              {
-                loader: require.resolve('css-loader'),
-                options: {
-                  importLoaders: 1
-                }
-              },
-              {
-                loader: require.resolve('postcss-loader'),
-                options: postcssOptions
-              },
-              {
-                loader: require.resolve('less-loader')
-              }
-            ]
-          }
-        ]
-          .concat(
-            config.svgSpriteLoaderDirs
-              ? [
-                  {
-                    test: /\.svg$/,
-                    loader: require.resolve('file-loader'),
-                    exclude: config.svgSpriteLoaderDirs,
-                    options: {
-                      name: 'static/media/[name].[hash:8].[ext]'
-                    }
-                  },
-                  {
-                    test: /\.(svg)$/i,
-                    loader: require.resolve('svg-sprite-loader'),
-                    include: config.svgSpriteLoaderDirs
-                  }
-                ]
-              : []
-          )
-          .concat([
-            // "file" loader makes sure those assets get served by WebpackDevServer.
-            // When you `import` an asset, you get its (virtual) filename.
-            // In production, they would get copied to the `build` folder.
-            // This loader don't uses a "test" so it will catch all modules
-            // that fall through the other loaders.
-            {
-              // Exclude `js` files to keep "css" loader working as it injects
-              // it's runtime that would otherwise processed through "file" loader.
-              // Also exclude `html` and `json` extensions so they get processed
-              // by webpacks internal loaders.
-              exclude: [/\.js$/, /\.html$/, /\.json$/, /\.svg$/],
-              loader: require.resolve('file-loader'),
-              options: {
-                name: 'static/media/[name].[hash:8].[ext]'
-              }
-            }
-          ])
-      }
+            use: [require.resolve('style-loader')]
+              .concat(getCssLoaders({px2rem: env.control.PX2REM}))
+              .concat(require.resolve('less-loader')),
+          },
+          {
+            test: /\.scss$/,
+            // User need to install sass, sass-loader manually
+            use: [require.resolve('style-loader')]
+              .concat(getCssLoaders({px2rem: env.control.PX2REM}))
+              .concat('less-loader'),
+          },
+          // Use css-modules for *.module.(css|less|scss) 
+          {
+            test: /\.module\.css$/,
+            include: paths.appSrc,
+            use: [require.resolve('style-loader')]
+              .concat(getCssLoaders({modules: true, px2rem: env.control.PX2REM})),            
+          },
+          {
+            test: /\.module\.less$/,
+            include: paths.appSrc,
+            use: [require.resolve('style-loader')]
+              .concat(getCssLoaders({modules: true, px2rem: env.control.PX2REM}))             
+              .concat(require.resolve('less-loader')),
+          },
+          {
+            test: /\.module\.scss$/,
+            include: paths.appSrc,
+            // User need to install sass, sass-loader manually
+            use: [require.resolve('style-loader')]
+              .concat(getCssLoaders({modules: true, px2rem: env.control.PX2REM}))
+              .concat('sass-loader'),               
+          },
+          // "file" loader makes sure those assets get served by WebpackDevServer.
+          // When you `import` an asset, you get its (virtual) filename.
+          // In production, they would get copied to the `build` folder.
+          // This loader don't uses a "test" so it will catch all modules
+          // that fall through the other loaders.
+          {
+            // Exclude `js` files to keep "css" loader working as it injects
+            // it's runtime that would otherwise processed through "file" loader.
+            // Also exclude `html` and `json` extensions so they get processed
+            // by webpacks internal loaders.
+            exclude: [/\.js$/, /\.html$/, /\.json$/],
+            loader: require.resolve('file-loader'),
+            options: {
+              name: 'static/media/[name].[hash:8].[ext]',
+            },
+          },
+        ],
+      },
       // ** STOP ** Are you adding a new loader?
       // Make sure to add the new loader(s) before the "file" loader.
-    ]
+    ],
   },
   plugins: [
     // Makes some environment variables available in index.html.
@@ -303,7 +249,7 @@ module.exports = {
     // Generates an `index.html` file with the <script> injected.
     new HtmlWebpackPlugin({
       inject: true,
-      template: paths.appHtml
+      template: paths.appHtml,
     }),
     // Add module names to factory functions so they appear in browser profiler.
     new webpack.NamedModulesPlugin(),
@@ -326,7 +272,7 @@ module.exports = {
     // solution that requires the user to opt into importing specific locales.
     // https://github.com/jmblog/how-to-optimize-momentjs-with-webpack
     // You can remove this if you don't use Moment.js:
-    new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/)
+    new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
   ],
   // Some libraries import Node modules but don't use them in the browser.
   // Tell Webpack to provide empty mocks for them so importing them works.
@@ -334,12 +280,13 @@ module.exports = {
     dgram: 'empty',
     fs: 'empty',
     net: 'empty',
-    tls: 'empty'
+    tls: 'empty',
+    child_process: 'empty',
   },
   // Turn off performance hints during development because we don't do any
   // splitting or minification in interest of speed. These warnings become
   // cumbersome.
   performance: {
-    hints: false
-  }
+    hints: false,
+  },
 };

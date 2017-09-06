@@ -1,13 +1,3 @@
-// @remove-on-eject-begin
-/**
- * Copyright (c) 2015-present, Facebook, Inc.
- * All rights reserved.
- *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- */
-// @remove-on-eject-end
 'use strict';
 
 const fs = require('fs');
@@ -32,7 +22,7 @@ var dotenvFiles = [
   // since normally you expect tests to produce the same
   // results for everyone
   NODE_ENV !== 'test' && `${paths.dotenv}.local`,
-  paths.dotenv
+  paths.dotenv,
 ].filter(Boolean);
 
 // Load environment variables from .env* files. Suppress warnings using silent
@@ -42,7 +32,7 @@ var dotenvFiles = [
 dotenvFiles.forEach(dotenvFile => {
   if (fs.existsSync(dotenvFile)) {
     require('dotenv').config({
-      path: dotenvFile
+      path: dotenvFile,
     });
   }
 });
@@ -63,9 +53,13 @@ process.env.NODE_PATH = (process.env.NODE_PATH || '')
   .map(folder => path.resolve(appDirectory, folder))
   .join(path.delimiter);
 
-// Grab NODE_ENV and REACT_APP_* environment variables and prepare them to be
+// Grab NODE_ENV and HNA_* environment variables and prepare them to be
 // injected into the application via DefinePlugin in Webpack configuration.
-const REACT_APP = /^REACT_APP_/i;
+const REACT_APP = /^HNA_/i;
+
+function getControlValue(value) {
+  return value && JSON.parse(value);
+}
 
 function getClientEnvironment(publicUrl) {
   const raw = Object.keys(process.env)
@@ -83,7 +77,7 @@ function getClientEnvironment(publicUrl) {
         // For example, <img src={process.env.PUBLIC_URL + '/img/logo.png'} />.
         // This should only be used as an escape hatch. Normally you would put
         // images into the `src` and `import` them in code to get their paths.
-        PUBLIC_URL: publicUrl
+        PUBLIC_URL: publicUrl,
       }
     );
   // Stringify all values so we can feed into Webpack DefinePlugin
@@ -91,10 +85,15 @@ function getClientEnvironment(publicUrl) {
     'process.env': Object.keys(raw).reduce((env, key) => {
       env[key] = JSON.stringify(raw[key]);
       return env;
-    }, {})
+    }, {}),
   };
 
-  return { raw, stringified };
+  const control = {
+    CSS_MODULES: getControlValue(process.env.CSS_MODULES),
+    PX2REM: getControlValue(process.env.PX2REM)
+  }
+
+  return { raw, stringified, control };
 }
 
 module.exports = getClientEnvironment;
