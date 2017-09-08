@@ -1,6 +1,6 @@
 {
   "name": "dopey",
-  "version": "1.0.0-beta4",
+  "version": "1.0.0-beta5",
   "bin": "bin/dopey.js",
   "repository": "git@github.com:codering/dopey.git",
   "author": "codering <zcodeworld@gmail.com>",

@@ -329,6 +329,14 @@ module.exports = {
     // It is absolutely essential that NODE_ENV was set to production here.
     // Otherwise React will be compiled in the very slow development mode.
     new webpack.DefinePlugin(env.stringified),
+    // Common Chunk
+    new webpack.optimize.CommonsChunkPlugin({
+      name: "common",
+      minChunks: function (module) {
+        // this assumes your vendor imports exist in the node_modules directory
+        return module.context && module.context.indexOf("node_modules") !== -1;
+      }
+    }),
     // Minify the code.
     new webpack.optimize.UglifyJsPlugin({
       compress: {
