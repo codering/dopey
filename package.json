@@ -1,11 +1,11 @@
 {
   "name": "dopey",
-  "version": "1.0.0-beta3",
+  "version": "1.0.0-beta4",
   "bin": "bin/dopey.js",
   "repository": "git@github.com:codering/dopey.git",
   "author": "codering <zcodeworld@gmail.com>",
   "license": "MIT",
-  "script": {
+  "scripts": {
     "pub-beta": "npm publish --tag beta"
   },
   "dependencies": {
