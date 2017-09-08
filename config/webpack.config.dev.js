@@ -23,10 +23,10 @@ const publicUrl = '';
 const env = getClientEnvironment(publicUrl);
 
 // Common CSS loaders
-const getCssLoaders = ({modules, px2rem}) => [
+const getCssLoaders = ({cssModules, px2rem, autoprefixerBrowsers} = {}) => [
   {
     loader: require.resolve('css-loader'),
-    options: modules ? {
+    options: cssModules ? {
       importLoaders: 1,
       modules: true,
       localIdentName: '[name]__[local]___[hash:base64:5]',
@@ -43,7 +43,7 @@ const getCssLoaders = ({modules, px2rem}) => [
       plugins: () => [
         require('postcss-flexbugs-fixes'),
         autoprefixer({
-          browsers: [
+          browsers: autoprefixerBrowsers || [
             '>1%',
             'last 4 versions',
             'Firefox ESR',
@@ -179,44 +179,53 @@ module.exports = {
           // In production, we use a plugin to extract that CSS to a file, but
           // in development "style" loader enables hot editing of CSS.
           {
+            // src
             test: /\.css$/,
+            include: paths.appSrc,
+            exclude: env.control.cssModules ? paths.appStyle : [],
             use: [require.resolve('style-loader')]
-              .concat(getCssLoaders({px2rem: env.control.PX2REM})),
+              .concat(getCssLoaders(env.control)),
           },
+          {
+            // node_modules
+            test: /\.css$/,
+            include: paths.appNodeModules,
+            use: [require.resolve('style-loader')]
+              .concat(getCssLoaders())
+          },
+          {
+            // src/styles
+            test: /\.css$/,
+            include: env.control.cssModules ? paths.appStyle : [],
+            use: [require.resolve('style-loader')]
+              .concat(getCssLoaders({
+                px2rem: env.control.px2rem,
+              }))
+          },
+          // Like CSS 
           {
             test: /\.less$/,
+            include: paths.appSrc,
+            exclude: env.control.cssModules ? paths.appStyle : [],
             use: [require.resolve('style-loader')]
-              .concat(getCssLoaders({px2rem: env.control.PX2REM}))
+              .concat(getCssLoaders(env.control))
               .concat(require.resolve('less-loader')),
-          },
+          }, 
           {
-            test: /\.scss$/,
-            // User need to install sass, sass-loader manually
+            test: /\.less$/,
+            include: paths.appNodeModules,
             use: [require.resolve('style-loader')]
-              .concat(getCssLoaders({px2rem: env.control.PX2REM}))
-              .concat('less-loader'),
-          },
-          // Use css-modules for *.module.(css|less|scss) 
-          {
-            test: /\.module\.css$/,
-            include: paths.appSrc,
-            use: [require.resolve('style-loader')]
-              .concat(getCssLoaders({modules: true, px2rem: env.control.PX2REM})),            
-          },
-          {
-            test: /\.module\.less$/,
-            include: paths.appSrc,
-            use: [require.resolve('style-loader')]
-              .concat(getCssLoaders({modules: true, px2rem: env.control.PX2REM}))             
+              .concat(getCssLoaders())
               .concat(require.resolve('less-loader')),
-          },
+          },   
           {
-            test: /\.module\.scss$/,
-            include: paths.appSrc,
-            // User need to install sass, sass-loader manually
+            test: /\.less$/,
+            include: env.control.cssModules ? paths.appStyle : [],
             use: [require.resolve('style-loader')]
-              .concat(getCssLoaders({modules: true, px2rem: env.control.PX2REM}))
-              .concat('sass-loader'),               
+              .concat(getCssLoaders({
+                px2rem: env.control.px2rem,
+              }))
+              .concat(require.resolve('less-loader')),
           },
           // "file" loader makes sure those assets get served by WebpackDevServer.
           // When you `import` an asset, you get its (virtual) filename.

@@ -35,10 +35,10 @@ if (env.stringified['process.env'].NODE_ENV !== '"production"') {
 }
 
 // Common CSS loaders
-const getCssLoaders = ({modules, px2rem}) => [
+const getCssLoaders = ({cssModules, px2rem, autoprefixerBrowsers} = {}) => [
   {
     loader: require.resolve('css-loader'),
-    options: modules ? {
+    options: cssModules ? {
       importLoaders: 1,
       modules: true,
       localIdentName: '[name]__[local]___[hash:base64:5]',
@@ -55,7 +55,7 @@ const getCssLoaders = ({modules, px2rem}) => [
       plugins: () => [
         require('postcss-flexbugs-fixes'),
         autoprefixer({
-          browsers: [
+          browsers: autoprefixerBrowsers || [
             '>1%',
             'last 4 versions',
             'Firefox ESR',
@@ -186,12 +186,63 @@ module.exports = {
           // use the "style" loader inside the async code so CSS from them won't be
           // in the main CSS file.
           {
+            // src
             test: /\.css$/,
+            include: paths.appSrc,
+            exclude: env.control.cssModules ? paths.appStyle : [],
             loader: ExtractTextPlugin.extract(
               Object.assign(
                 {
                   fallback: require.resolve('style-loader'),
-                  use: getCssLoaders({px2rem: env.control.PX2REM}),
+                  use: getCssLoaders(env.control),
+                },
+                extractTextPluginOptions
+              )
+            ),
+            // Note: this won't work without `new ExtractTextPlugin()` in `plugins`.
+          },
+          {
+            // node_modules
+            test: /\.css$/,
+            include: paths.appNodeModules,
+            loader: ExtractTextPlugin.extract(
+              Object.assign(
+                {
+                  fallback: require.resolve('style-loader'),
+                  use: getCssLoaders(),
+                },
+                extractTextPluginOptions
+              )
+            ),
+            // Note: this won't work without `new ExtractTextPlugin()` in `plugins`.
+          },
+          {
+            // src/style
+            test: /\.css$/,
+            include: env.control.cssModules ? paths.appStyle : [],
+            loader: ExtractTextPlugin.extract(
+              Object.assign(
+                {
+                  fallback: require.resolve('style-loader'),
+                  use: getCssLoaders({
+                    px2rem: env.control.px2rem
+                  }),
+                },
+                extractTextPluginOptions
+              )
+            ),
+            // Note: this won't work without `new ExtractTextPlugin()` in `plugins`.
+          },
+          // Like CSS
+          {
+            test: /\.less$/,
+            include: paths.appSrc,
+            exclude: env.control.cssModules ? paths.appStyle : [],
+            loader: ExtractTextPlugin.extract(
+              Object.assign(
+                {
+                  fallback: require.resolve('style-loader'),
+                  use: getCssLoaders(env.control).concat(require.resolve('less-loader')),
                 },
                 extractTextPluginOptions
               )
@@ -200,11 +251,12 @@ module.exports = {
           },
           {
             test: /\.less$/,
+            include: paths.appNodeModules,
             loader: ExtractTextPlugin.extract(
               Object.assign(
                 {
                   fallback: require.resolve('style-loader'),
-                  use: getCssLoaders({px2rem: env.control.PX2REM}).concat(require.resolve('less-loader')),
+                  use: getCssLoaders().concat(require.resolve('less-loader')),
                 },
                 extractTextPluginOptions
               )
@@ -212,55 +264,15 @@ module.exports = {
             // Note: this won't work without `new ExtractTextPlugin()` in `plugins`.
           },
           {
-            test: /\.scss$/,
+            test: /\.less$/,
+            include: env.control.cssModules ? paths.appStyle : [],
             loader: ExtractTextPlugin.extract(
               Object.assign(
                 {
                   fallback: require.resolve('style-loader'),
-                  use: getCssLoaders({px2rem: env.control.PX2REM}).concat('scss-loader'),
-                },
-                extractTextPluginOptions
-              )
-            ),
-            // Note: this won't work without `new ExtractTextPlugin()` in `plugins`.
-          },
-          // Use css-modules for *.module.(css|less|scss) 
-          {
-            test: /\.module\.css$/,
-            include: paths.appSrc,
-            loader: ExtractTextPlugin.extract(
-              Object.assign(
-                {
-                  fallback: require.resolve('style-loader'),
-                  use: getCssLoaders({modules: true, px2rem: env.control.PX2REM}),
-                },
-                extractTextPluginOptions
-              )
-            ),
-            // Note: this won't work without `new ExtractTextPlugin()` in `plugins`.
-          },
-          {
-            test: /\.module\.less$/,
-            include: paths.appSrc,
-            loader: ExtractTextPlugin.extract(
-              Object.assign(
-                {
-                  fallback: require.resolve('style-loader'),
-                  use: getCssLoaders({modules: true, px2rem: env.control.PX2REM}).concat(require.resolve('less-loader')),
-                },
-                extractTextPluginOptions
-              )
-            ),
-            // Note: this won't work without `new ExtractTextPlugin()` in `plugins`.
-          },
-          {
-            test: /\.module\.scss$/,
-            include: paths.appSrc,
-            loader: ExtractTextPlugin.extract(
-              Object.assign(
-                {
-                  fallback: require.resolve('style-loader'),
-                  use: getCssLoaders({modules: true, px2rem: env.control.PX2REM}).concat('scss-loader'),
+                  use: getCssLoaders({
+                    px2rem: env.control.px2rem
+                  }).concat(require.resolve('less-loader')),
                 },
                 extractTextPluginOptions
               )

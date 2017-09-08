@@ -5,6 +5,9 @@
   "repository": "git@github.com:codering/dopey.git",
   "author": "codering <zcodeworld@gmail.com>",
   "license": "MIT",
+  "script": {
+    "pub-beta": "npm publish --tag beta"
+  },
   "dependencies": {
     "autoprefixer": "7.1.2",
     "babel-core": "6.25.0",
